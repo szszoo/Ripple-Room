@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ripple Room</title><meta property="og:type" content="website"><meta property="og:title" content="Ripple Room"><meta property="og:description" content="사진에 물결 효과를 더해보세요."><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Ripple Room"><meta name="twitter:description" content="사진에 물결 효과를 더해보세요.">
+<style>
+:root{font-family:Inter,Arial,'Apple SD Gothic Neo',sans-serif;color:#262937;background:#f7f8fc;--accent:#587b99}*{box-sizing:border-box}body{margin:0}button,input{font:inherit}.wrap{max-width:1320px;margin:auto;padding:28px 22px 60px}header{margin-bottom:23px}h1{font-size:28px;letter-spacing:-1.2px;margin:0 0 8px}header p,.hint{font-size:13px;color:#808598;line-height:1.6;margin:0}.layout{display:grid;grid-template-columns:350px minmax(0,1fr);align-items:start;gap:19px}.panel,.preview{background:#fff;border:1px solid #e9eaf1;border-radius:20px;padding:23px;box-shadow:0 6px 25px #23274308}.panel h2,.preview h2{font-size:16px;margin:0}.preview-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px}.tag{background:#e8eef5;color:var(--accent);border-radius:30px;font-size:11px;font-weight:750;padding:7px 11px}.group{padding:21px 0;border-top:1px solid #eef0f4}.group.first{border:0;padding-top:19px}.group label.field{display:flex;justify-content:space-between;font-size:13px;font-weight:650;margin-bottom:10px}.field output{color:var(--accent);font-variant-numeric:tabular-nums}.group input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;margin:0 0 15px}.group input[type=file]{display:none}.upload,.btn{width:100%;display:block;background:#fff;border:1px solid #dcdeea;border-radius:11px;padding:12px 10px;text-align:center;font-size:13px;font-weight:650;cursor:pointer}.upload:hover,.btn:hover{background:#edf3f8}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn:disabled{opacity:.45;cursor:not-allowed}.small{font-size:12px;color:#9396a5;line-height:1.6;margin:9px 0 0}.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}.list{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.chip{border-radius:9px;border:1px solid #e3e4ef;padding:8px 12px;background:white;color:#626577;cursor:pointer;font-size:12px;font-weight:700}.chip.selected{background:#e6eef7;color:#3d6381;border-color:#8ba7bd}.check{display:flex;align-items:center;gap:9px;font-size:12px;cursor:pointer}.check input{accent-color:var(--accent)}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.actions .primary{grid-column:span 2}.status{font-size:12px;color:#888b9b;margin-top:12px;line-height:1.5}.stage{background:linear-gradient(145deg,#eff1f6 0%,#d9dee9 52%,#d2d9dc 100%);border-radius:14px;min-height:465px;padding:23px;display:flex;align-items:center;justify-content:center;overflow:hidden}.canvas-wrap{position:relative;display:inline-block;line-height:0;max-width:100%;box-shadow:0 12px 35px #25284320;touch-action:none}.canvas-wrap canvas{display:block;max-width:100%;max-height:70vh;width:auto;height:auto}.canvas-wrap #overlay{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none;box-shadow:none}.hint{margin-top:13px}.notice{font-size:12px;color:#898d9b;background:#f7f8fc;padding:10px 12px;border-radius:10px;line-height:1.6}.hide{display:none!important}@media(max-width:850px){.layout{grid-template-columns:minmax(0,1fr)}.wrap{padding:19px 13px 35px}.panel,.preview{padding:17px}.stage{min-height:285px;padding:13px}h1{font-size:25px}.canvas-wrap canvas{max-height:58vh}}@media(min-width:851px) and (max-width:1100px){.layout{grid-template-columns:300px minmax(0,1fr)}}
+
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+/* Actions are grouped by intent: create, edit, remove, then save. */
+.manage-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.manage-actions .btn{background:#edf3f8;border-color:#c9d9e6;color:#365d78}
+.manage-actions .btn:hover{background:#e1ecf5}
+.remove-group{padding-top:17px;padding-bottom:21px}
+.remove-title{display:flex;justify-content:space-between;font-size:13px;font-weight:650;color:inherit;margin:0 0 10px}
+.remove-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.remove-actions .btn{background:transparent;color:#718092;border-color:#dce4ec;font-weight:550}
+.remove-actions .btn:hover{background:#f5f0f0;color:#94616a;border-color:#e3cbd0}
+.remove-actions #clear{color:#967b84}
+.final-actions{padding-top:22px}
+
+.credit{color:#adb9bd;font-size:11px;font-weight:500;letter-spacing:.02em;white-space:nowrap}
+.actions{grid-template-columns:1fr 1fr}
+.actions .primary{grid-column:auto}
+.modal-backdrop{position:fixed;inset:0;z-index:999;background:rgba(12,24,40,.73);display:flex;align-items:center;justify-content:center;padding:18px;overflow-y:auto}
+.save-modal{background:#fff;border-radius:20px;padding:24px;width:min(520px,100%);max-height:calc(100dvh - 36px);overflow:auto;box-shadow:0 22px 80px rgba(14,30,38,.3)}
+.modal-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:17px}
+.modal-heading h2{font-size:18px;margin:0 0 6px}
+.modal-heading p{font-size:12px;color:#89939c;line-height:1.5;margin:0}
+.close-modal{appearance:none;border:0;background:#e9eff5;color:#56758e;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:23px;line-height:1;flex:none}
+.modal-preview{display:flex;justify-content:center;align-items:center;min-height:130px;max-height:min(52dvh,460px);padding:16px;border-radius:13px;background:#e4ebf2;overflow:hidden}
+.modal-preview img{display:block;max-width:100%;max-height:calc(min(52dvh,460px) - 32px);object-fit:contain;box-shadow:0 5px 20px #1e303526}
+.save-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:17px}
+.modal-tip{font-size:11px;line-height:1.6;color:#8b9ea2;margin:12px 0 0}
+body.modal-open{overflow:hidden}
+@media(max-width:480px){.save-modal{padding:18px}.modal-backdrop{padding:10px}.modal-preview{max-height:48dvh}.modal-preview img{max-height:calc(48dvh - 32px)}}
+
+/* Rainy street mood: misty navy atmosphere, fine rain and wet-pavement reflections. */
+:root{--rain-navy:#23374d;--rain-blue:#587b99;--rain-mist:#dce5ee}
+html{min-height:100%;background:#121f35}
+body{min-height:100vh;isolation:isolate;background:
+  radial-gradient(ellipse 75% 34% at 53% 105%,rgba(91,123,157,.24),transparent 76%),
+  radial-gradient(ellipse 42% 50% at 6% 70%,rgba(69,99,137,.18),transparent 77%),
+  radial-gradient(ellipse 48% 42% at 91% 22%,rgba(94,118,151,.14),transparent 79%),
+  linear-gradient(167deg,#293f59 0%,#1d3049 37%,#14253d 70%,#0e1b30 100%);
+  background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.54;
+  background-image:repeating-linear-gradient(105deg,transparent 0px,transparent 26px,rgba(226,240,249,.13) 27px,transparent 28px,transparent 65px),
+    repeating-linear-gradient(105deg,transparent 0px,transparent 112px,rgba(217,233,244,.13) 113px,transparent 114px,transparent 172px);
+  background-size:280px 100%,390px 100%;mask-image:linear-gradient(to bottom,transparent 0%,#000 22%,#000 90%)}
+body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:29vh;z-index:-1;pointer-events:none;opacity:.55;
+  background:linear-gradient(to top,rgba(146,173,195,.18),transparent)}
+.wrap{position:relative}
+header h1{color:#f4f7fb;text-shadow:0 2px 20px rgba(12,26,40,.15)}
+header p{color:#d2dce6}
+.panel,.preview{background:rgba(248,251,254,.96);border-color:rgba(234,242,248,.76);box-shadow:0 18px 55px rgba(12,27,43,.19);backdrop-filter:blur(14px)}
+.panel h2,.preview h2{color:#263c50}
+.group{border-top-color:#e2e9ef}
+.upload,.btn{border-color:#cfdae5;color:#344e62;background:#fbfdff}
+.btn.primary{color:#fff;background:var(--accent);border-color:var(--accent)}
+.btn.primary:hover{background:#476985;border-color:#476985}
+.chip{border-color:#d5e0e9;color:#576c7f}
+.chip.selected{background:#e3edf7;color:#3b617e;border-color:#80a3be}
+.tag{background:#e5edf6;color:#507593}
+.credit{color:#a1b2c1}
+.stage{background:linear-gradient(150deg,#dce5ee,#bfcfdc 52%,#e3eaf0 100%)}
+.modal-preview{background:#e4ebf2}
+.save-modal{background:#f8fbfe}
+@media(max-width:850px){body::before{opacity:.36}header p{color:#dbe5ee}}
+@media(prefers-reduced-motion:reduce){body{background-attachment:scroll}}
+</style></head><body><main class="wrap"><header><h1>Ripple Room <span aria-hidden="true">◌</span></h1><p>사진 위에 물방울이 떨어진 것처럼, 자연스럽게 번지는 물결을 만들어보세요.</p></header><div class="layout"><section class="panel"><div class="panel-head"><h2>물결 편집하기</h2><span class="credit">@hee_archive_</span></div>
+<div class="group first"><label class="upload" for="upload">＋ 사진 업로드하기</label><input type="file" id="upload" accept="image/*"><p class="small">JPG, PNG · 사진은 기기에서만 처리돼요.</p></div>
+<div class="group"><label class="field">물결 선택 <span id="count" style="color:#9396a5">3개</span></label><div id="chips" class="list"></div><div class="manage-actions"><button class="btn" id="add">＋ 물결 추가</button><button class="btn" id="duplicate">＋ 선택 물결 복제</button></div><p class="small">미리보기를 눌러 물결을 추가하거나, 물결을 선택해 드래그로 옮길 수 있어요.</p></div>
+<div class="group" id="editGroup"><label class="field">선택한 물결 크기 <output id="radiusVal">84</output></label><input type="range" id="radius" min="24" max="220" value="84"><label class="field">굴절 강도 <output id="strengthVal">26</output></label><input type="range" id="strength" min="0" max="60" value="26"><label class="field">물결 고리 수 <output id="ringsVal">5</output></label><input type="range" id="rings" min="2" max="9" value="5"><label class="field">자연스러운 흔들림 <output id="irregularVal">45%</output></label><input type="range" id="irregular" min="0" max="100" value="45"><label class="field">물결 투명도 <output id="alphaVal">78%</output></label><input type="range" id="alpha" min="0" max="100" value="78"><label class="check"><input type="checkbox" id="highlight"> 빛 반사 하이라이트</label></div>
+<div class="group remove-group"><p class="remove-title">물결 삭제</p><div class="remove-actions"><button class="btn" id="remove">선택한 물결 삭제</button><button class="btn" id="clear">모든 물결 지우기</button></div></div>
+<div class="group final-actions"><div class="actions"><button class="btn" id="reset">물결 초기화</button><button class="btn primary" id="openSave">저장</button></div><div id="status" class="status">예시 그래픽에서 물결 효과를 체험해보세요. 사진을 올리면 예시 화면은 교체돼요.</div></div></section>
+<section class="preview"><div class="preview-head"><h2>미리보기</h2><span class="tag" id="previewTag">EXAMPLE</span></div><div class="stage"><div class="canvas-wrap" id="canvasWrap"><canvas id="canvas" width="600" height="750" aria-label="사진과 물결 효과"></canvas><canvas id="overlay" width="600" height="750" aria-label="물결 선택 및 위치 변경"></canvas></div></div><p class="hint">푸른색 점선은 현재 선택된 물결의 편집 표시예요. 저장된 사진에는 표시되지 않아요.</p></section></div></main>
+<div class="modal-backdrop hide" id="saveModal" role="presentation">
+  <section class="save-modal" role="dialog" aria-modal="true" aria-labelledby="saveTitle">
+    <div class="modal-heading"><div><h2 id="saveTitle">이미지 저장하기</h2><p>완성된 이미지를 확인하고 저장 형식을 선택해 주세요.</p></div><button type="button" class="close-modal" id="closeSave" aria-label="닫기">×</button></div>
+    <div class="modal-preview"><img id="saveImage" alt="저장할 이미지 미리보기"></div>
+    <div class="save-actions"><button type="button" class="btn primary" id="png">PNG로 저장</button><button type="button" class="btn" id="jpg">JPG로 저장</button></div>
+    <p class="modal-tip">저장이 되지 않는 경우, 네이버·크롬 등 다른 브라우저에서 링크를 다시 열어 시도해 주세요 :)</p>
+  </section>
+</div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),cv=$('canvas'),c=cv.getContext('2d'),ov=$('overlay'),o=ov.getContext('2d');
+let base=null,points=[],selected=0,uid=0,dragging=false,dirty=false,busy=false;
+const presets=[[.125,.78,92,26],[.278,.235,62,26],[.756,.415,103,38]];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function create(x,y,r=84){return{id:++uid,x,y,radius:r,strength:26,rings:5,irregular:45,alpha:78,highlight:false,seed:uid*1.371}}
+function setCanvas(w,h){cv.width=w;cv.height=h;ov.width=w;ov.height=h}
+function blank(){
+  // Clearly illustrative placeholder artwork: crisp patterns reveal pixel displacement.
+  const w=900,h=600;
+  setCanvas(w,h);
+  const bg=c.createLinearGradient(0,0,w,h);
+  bg.addColorStop(0,'#242e37');
+  bg.addColorStop(.44,'#3a4b52');
+  bg.addColorStop(1,'#454b50');
+  c.fillStyle=bg;c.fillRect(0,0,w,h);
+
+  // Large flat-color shapes read as a designed sample, not an uploaded photograph.
+  c.fillStyle='#829c94';
+  c.beginPath();c.moveTo(-60,115);c.bezierCurveTo(115,-45,365,12,385,166);
+  c.bezierCurveTo(409,304,157,367,-50,348);c.closePath();c.fill();
+  c.fillStyle='#ae9987';
+  c.beginPath();c.moveTo(612,-50);c.bezierCurveTo(500,95,569,198,800,252);
+  c.bezierCurveTo(935,285,975,210,955,-40);c.closePath();c.fill();
+  c.fillStyle='#b2b9bb';
+  c.beginPath();c.moveTo(345,620);c.bezierCurveTo(323,429,511,372,620,414);
+  c.bezierCurveTo(774,472,788,571,710,650);c.closePath();c.fill();
+  c.fillStyle='#596e7c';
+  c.beginPath();c.ellipse(105,555,190,120,-.32,0,Math.PI*2);c.fill();
+
+  // A highly legible fine-line overlay makes distortions visible even with highlight OFF.
+  c.save();c.globalAlpha=.18;c.strokeStyle='#d9e2e2';c.lineWidth=1.25;
+  for(let x=22;x<w;x+=27){c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke()}
+  for(let y=16;y<h;y+=27){c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke()}
+  c.restore();
+
+  // Reflected roadside markings provide contrast without sample lettering.
+  c.save();c.strokeStyle='#20313a';c.lineWidth=6;c.lineCap='round';c.globalAlpha=.48;
+  for(let j=0;j<11;j++){
+    const y=98+j*17;
+    c.beginPath();c.moveTo(95,y);c.lineTo(255-(j%3)*15,y);c.stroke();
+  }
+  c.restore();
+  base=c.getImageData(0,0,w,h);
+}
+function initial(){points=presets.map(([x,y,r,strength])=>{const p=create(x,y,r);p.strength=strength;return p});selected=points[0].id;sync();schedule()}
+function current(){return points.find(p=>p.id===selected)||null}
+function sync(){
+  const p=current();
+  $('editGroup').classList.toggle('hide',!p);
+  $('count').textContent=points.length+'개';
+  $('chips').replaceChildren(...points.map((v,i)=>{let b=document.createElement('button');b.className='chip'+(v.id===selected?' selected':'');b.textContent='물결 '+(i+1);b.onclick=()=>{selected=v.id;sync();outline()};return b}));
+  if(p){
+    ['radius','strength','rings','irregular','alpha'].forEach(k=>{$(k).value=p[k];$(k+'Val').textContent=p[k]+(k==='irregular'||k==='alpha'?'%':'')});
+    $('highlight').checked=p.highlight
+  }
+  outline()
+}
+function noise(a,seed){return .58*Math.sin(a*2.0+seed)+.29*Math.sin(a*3.75-seed*1.37)+.13*Math.sin(a*7.1+seed*2.1)}
+function wave(x,y,p,scale){
+  const vx=x-p.x*cv.width,vy=y-p.y*cv.height;
+  const angle=Math.atan2(vy,vx),distance=Math.hypot(vx,vy);
+  const radius=p.radius*scale;
+  const wiggle=(p.irregular/100)*radius*.12*noise(angle,p.seed);
+  const d=distance+wiggle;
+  if(d>=radius||d<.1)return null;
+  const t=d/radius;
+  const falloff=Math.pow(Math.sin(Math.PI*t),1.65);
+  const phase=(1-t)*p.rings*Math.PI*2+noise(angle,p.seed+2)*p.irregular/100*.42;
+  const shift=Math.sin(phase)*(p.strength*scale)*falloff;
+  const shine=p.highlight?Math.cos(phase+.2)*falloff*.17*(p.alpha/100):0;
+  const opacity=falloff*(p.alpha/100)*.9;
+  return [vx/(distance||1)*shift,vy/(distance||1)*shift,shine,opacity]
+}
+function draw(){
+  if(!base)return;
+  const w=cv.width,h=cv.height,s=Math.min(w,h)/600,src=base.data;
+  let out=c.createImageData(w,h),dst=out.data;
+  const active=points.map(p=>({...p,bx:p.x*w,by:p.y*h,rr:(p.radius*s*1.2)**2}));
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      let dx=0,dy=0,light=0,opacity=0;
+      for(let p of active){
+        if((x-p.bx)**2+(y-p.by)**2>p.rr)continue;
+        let a=wave(x,y,p,s);
+        if(a){dx+=a[0];dy+=a[1];light+=a[2];opacity+=a[3]}
+      }
+      const sx=clamp(x+dx,0,w-1),sy=clamp(y+dy,0,h-1),x0=sx|0,y0=sy|0,x1=Math.min(w-1,x0+1),y1=Math.min(h-1,y0+1),fx=sx-x0,fy=sy-y0,ix=(y*w+x)*4;
+      const ia=(y0*w+x0)*4,ib=(y0*w+x1)*4,ic=(y1*w+x0)*4,id=(y1*w+x1)*4;
+      const blend=clamp(opacity,0,1);
+      for(let k=0;k<3;k++){
+        const original=src[ix+k];
+        const distorted=(src[ia+k]*(1-fx)+src[ib+k]*fx)*(1-fy)+(src[ic+k]*(1-fx)+src[id+k]*fx)*fy;
+        const mixed=original*(1-blend)+distorted*blend;
+        dst[ix+k]=clamp(mixed*(1+light)+light*14,0,255)
+      }
+      dst[ix+3]=255
+    }
+  }
+  c.putImageData(out,0,0);outline()
+}
+function schedule(){dirty=true;if(busy)return;busy=true;requestAnimationFrame(()=>{busy=false;if(dirty){dirty=false;draw()}})}
+function outline(){
+  o.clearRect(0,0,ov.width,ov.height);let p=current();if(!p)return;
+  const s=Math.min(ov.width,ov.height)/600,x=p.x*ov.width,y=p.y*ov.height,r=p.radius*s;
+  o.save();o.strokeStyle='#a1c3d8';o.lineWidth=Math.max(1.7,2*s);o.setLineDash([7*s,6*s]);o.beginPath();
+  for(let i=0;i<=160;i++){let a=i/160*Math.PI*2;let rr=r-p.irregular/100*r*.12*noise(a,p.seed);let px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;if(!i)o.moveTo(px,py);else o.lineTo(px,py)}
+  o.stroke();o.setLineDash([]);o.fillStyle='#587b99';o.strokeStyle='#fff';o.lineWidth=2.3*s;o.beginPath();o.arc(x,y,Math.max(5,7*s),0,Math.PI*2);o.fill();o.stroke();o.restore()
+}
+function point(e){const r=ov.getBoundingClientRect();return{x:clamp((e.clientX-r.left)/r.width,0,1),y:clamp((e.clientY-r.top)/r.height,0,1)}}
+function hit(p){const s=Math.min(cv.width,cv.height)/600;for(let i=points.length-1;i>=0;i--){let a=points[i],d=Math.hypot((a.x-p.x)*cv.width,(a.y-p.y)*cv.height);if(d<Math.max(19*s,a.radius*s*.88))return a}return null}
+ov.addEventListener('pointerdown',e=>{e.preventDefault();let p=point(e),h=hit(p);if(h){selected=h.id;dragging=true;ov.setPointerCapture(e.pointerId);sync()}else{const a=create(p.x,p.y);points.push(a);selected=a.id;dragging=true;ov.setPointerCapture(e.pointerId);sync();schedule()}});
+ov.addEventListener('pointermove',e=>{if(!dragging)return;let a=current(),p=point(e);if(a){a.x=p.x;a.y=p.y;outline();schedule()}});
+const end=()=>{dragging=false};ov.addEventListener('pointerup',end);ov.addEventListener('pointercancel',end);
+['radius','strength','rings','irregular','alpha'].forEach(k=>{$(k).addEventListener('input',()=>{let p=current();if(!p)return;p[k]=+$(k).value;$(k+'Val').textContent=p[k]+(k==='irregular'||k==='alpha'?'%':'');schedule()})});
+$('highlight').onchange=e=>{let p=current();if(p){p.highlight=e.target.checked;schedule()}};
+$('add').onclick=()=>{let p=create(.5,.5);points.push(p);selected=p.id;sync();schedule()};
+$('duplicate').onclick=()=>{let p=current();if(!p)return;let n={...p,id:++uid,x:clamp(p.x+.08,0,1),y:clamp(p.y+.08,0,1),seed:uid*1.371};points.push(n);selected=n.id;sync();schedule()};
+$('remove').onclick=()=>{points=points.filter(p=>p.id!==selected);selected=points.at(-1)?.id||null;sync();schedule()};
+$('clear').onclick=()=>{points=[];selected=null;sync();schedule()};$('reset').onclick=()=>{initial()};
+$('upload').onchange=e=>{let f=e.target.files?.[0];if(!f)return;let url=URL.createObjectURL(f),im=new Image();im.onload=()=>{let scale=Math.min(1,1300/Math.max(im.naturalWidth,im.naturalHeight));let w=Math.max(1,Math.round(im.naturalWidth*scale)),h=Math.max(1,Math.round(im.naturalHeight*scale));setCanvas(w,h);c.drawImage(im,0,0,w,h);base=c.getImageData(0,0,w,h);initial();$('status').textContent='';$('previewTag').textContent='LIVE PREVIEW';URL.revokeObjectURL(url)};im.onerror=()=>{$('status').textContent='사진을 열 수 없어요. 다른 이미지로 시도해 주세요.';URL.revokeObjectURL(url)};im.src=url};
+function save(format){let a=document.createElement('a');a.download='ripple-room.'+(format==='image/png'?'png':'jpg');if(format==='image/jpeg'){let t=document.createElement('canvas');t.width=cv.width;t.height=cv.height;let x=t.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,t.width,t.height);x.drawImage(cv,0,0);a.href=t.toDataURL(format,.94)}else a.href=cv.toDataURL(format);a.click()};
+const modal=$('saveModal');let previousFocus=null;
+function closeModal(){modal.classList.add('hide');document.body.classList.remove('modal-open');$('saveImage').removeAttribute('src');if(previousFocus)previousFocus.focus()}
+$('openSave').onclick=()=>{if(!base)return;previousFocus=document.activeElement;$('saveImage').src=cv.toDataURL('image/png');modal.classList.remove('hide');document.body.classList.add('modal-open');$('closeSave').focus()};
+$('closeSave').onclick=closeModal;
+modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
+document.addEventListener('keydown',e=>{if(modal.classList.contains('hide'))return;if(e.key==='Escape')closeModal();if(e.key==='Tab'){const controls=[$('closeSave'),$('png'),$('jpg')];const index=controls.indexOf(document.activeElement);if(e.shiftKey&&index===0){e.preventDefault();controls.at(-1).focus()}else if(!e.shiftKey&&index===controls.length-1){e.preventDefault();controls[0].focus()}}});
+$('png').onclick=()=>save('image/png');$('jpg').onclick=()=>save('image/jpeg');blank();initial();})();
+</script></body></html>
